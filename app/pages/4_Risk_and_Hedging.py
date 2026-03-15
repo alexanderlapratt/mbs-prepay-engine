@@ -29,7 +29,7 @@ from app.components.charts import (
     duration_convexity_chart,
     hedge_units_chart,
 )
-from app.components.tables import format_scenario_summary, csv_download_button
+from app.components.tables import format_scenario_summary, format_hedge_table, csv_download_button
 
 inject_css()
 page_header("Risk & Hedging", "Price, WAL, effective duration, convexity, and DV01-based hedge ratios")
@@ -171,14 +171,7 @@ for r in scenario_results:
 hedge_summary = build_hedge_summary(hedge_rows)
 hedge_df = pd.DataFrame(hedge_summary)
 st.dataframe(
-    hedge_df.style.format({
-        "dv01_dollar":         "${:,.0f}",
-        "hedge_units":         "{:.1f}",
-        "hedge_notional":      "${:,.0f}",
-        "eff_duration":        "{:.3f}",
-        "convexity":           "{:.4f}",
-        "convexity_cost_est":  "${:,.0f}",
-    }),
+    format_hedge_table(hedge_df),
     use_container_width=True,
 )
 st.caption(

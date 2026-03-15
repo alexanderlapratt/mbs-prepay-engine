@@ -301,8 +301,8 @@ st.caption("Navigate to individual pages for detailed analysis →")
 
 if scenario_results:
     from src.data_loader import scenario_results_to_df
-    summary_df = scenario_results_to_df(scenario_results)
     from app.components.tables import format_scenario_summary
+    summary_df = scenario_results_to_df(scenario_results)
     st.dataframe(
         format_scenario_summary(summary_df),
         use_container_width=True,

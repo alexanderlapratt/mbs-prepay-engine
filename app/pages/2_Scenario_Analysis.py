@@ -28,7 +28,7 @@ from app.components.charts import (
     refi_incentive_chart,
     cpr_decomposition_chart,
 )
-from app.components.tables import csv_download_button
+from app.components.tables import format_decomp_table, csv_download_button
 
 inject_css()
 page_header("Scenario Analysis", "CPR speed, SMM, and prepayment driver decomposition across 8 rate scenarios")
@@ -146,14 +146,7 @@ st.plotly_chart(fig_decomp, use_container_width=True)
 
 with st.expander("📋 Decomposition Detail Table"):
     st.dataframe(
-        decomp_df_val.style.format({
-            "refi_contribution_pct": "{:.2f}%",
-            "turnover_pct":          "{:.2f}%",
-            "total_cpr_pct":         "{:.2f}%",
-            "seasoning_mult":        "{:.3f}",
-            "burnout_adj":           "{:.3f}",
-            "incentive_bp":          "{:+.1f}",
-        }),
+        format_decomp_table(decomp_df_val),
         use_container_width=True,
     )
 
