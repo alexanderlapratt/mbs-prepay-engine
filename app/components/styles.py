@@ -211,6 +211,38 @@ MOBILE_CSS = """
     .stCaption, small { font-size: 0.7rem !important; }
 }
 
+/* ── Mobile: sidebar visibility fix — prevent bleed-through onto main content ── */
+@media (max-width: 768px) {
+    /* Force sidebar to be completely hidden by default on mobile */
+    [data-testid="stSidebar"] {
+        display: none !important;
+        width: 0px !important;
+        min-width: 0px !important;
+    }
+
+    /* Ensure main content takes full width on mobile */
+    [data-testid="stAppViewContainer"] > .main {
+        margin-left: 0px !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+
+    /* Hide sidebar collapse button on mobile */
+    [data-testid="collapsedControl"] {
+        display: none !important;
+    }
+
+    /* Make metric cards stack properly */
+    [data-testid="metric-container"] {
+        width: 100% !important;
+    }
+
+    /* Make tables scroll horizontally */
+    [data-testid="stDataFrame"] {
+        overflow-x: auto !important;
+    }
+}
+
 /* ── Mobile: sidebar — hidden by default, overlays when opened ──
    On narrow viewports the sidebar slides in from the left only when
    the user taps the hamburger toggle (aria-expanded="true").        */
