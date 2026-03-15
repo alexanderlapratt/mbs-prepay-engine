@@ -405,6 +405,6 @@ st.markdown("""
 
 st.divider()
 st.caption(
-    "Built by Alex LaPrott · Yale BS CS & Mathematics (4.0 major GPA) · "
+    "Built by Alexander LaPratt · Yale BS CS & Mathematics (4.0 major GPA) · "
     "Prepared for Garda Capital Partners MBS Desk Interview · March 2026"
 )

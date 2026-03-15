@@ -311,7 +311,7 @@ if scenario_results:
 
 st.divider()
 st.caption(
-    "Built by Alex LaPrott · Yale BS CS & Mathematics · "
+    "Built by Alexander LaPratt · Yale BS CS & Mathematics · "
     "MBS Prepayment Engine v1.0 · "
     "All data is user-supplied or model-computed — no external APIs required."
 )
