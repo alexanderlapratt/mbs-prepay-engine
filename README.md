@@ -239,7 +239,7 @@ Fit the CPR S-curve parameters via maximum likelihood to FNMA/FHLMC monthly remi
 
 ```bash
 # Clone the repo
-git clone https://github.com/username/mbs-prepay-engine.git
+git clone https://github.com/alexanderlapratt/mbs-prepay-engine.git
 cd mbs-prepay-engine
 
 # Create a virtual environment (recommended)
