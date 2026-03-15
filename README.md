@@ -174,20 +174,6 @@ HedgeUnits = DV01_pool / DV01_10Y_futures
 
 ---
 
-## Dashboard Screenshots
-
-_[Screenshots to be added after deployment]_
-
-| Page | Description |
-|------|-------------|
-| Pool Setup | Pool parameters, amortization preview, balance decay |
-| Scenario Analysis | CPR by scenario, S-curve, CPR driver decomposition |
-| Cash Flow Waterfall | Interest/principal/prepayment stacked area, remaining balance |
-| Risk & Hedging | Price, WAL, duration, convexity, DV01, hedge units |
-| Model Documentation | All formulas, assumptions, limitations, real-data roadmap |
-
----
-
 ## Key Findings: Duration Behavior Across Rate Scenarios
 
 Running the engine on the **Fannie Mae 6–7% bucket** (WAC 6.609%, 2024 Q1, $100M representative pool):
@@ -326,7 +312,7 @@ The app will be available at `http://localhost:8501`.
 
 1. Push this repo to GitHub (public or private).
 2. Go to [share.streamlit.io](https://share.streamlit.io) → New App.
-3. Select repo, branch `main`, and set **Main file path** to `app/Dashboard.py`.
+3. Select repo, branch `main`, and set **Main file path** to `app/dashboard.py`.
 4. Click **Deploy** — no additional configuration required.
 
 The `.streamlit/config.toml` file configures the dark theme and wide layout automatically.
@@ -340,7 +326,7 @@ The `.streamlit/config.toml` file configures the dark theme and wide layout auto
 ```
 mbs-prepay-engine/
 ├── app/
-│   ├── Dashboard.py              # Main entry point & sidebar controls
+│   ├── dashboard.py              # Main entry point & sidebar controls
 │   ├── pages/
 │   │   ├── 1_Pool_Setup.py
 │   │   ├── 2_Scenario_Analysis.py
