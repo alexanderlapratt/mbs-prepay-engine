@@ -179,6 +179,53 @@ def risk_metrics_for_chart(scenario_results: list[dict]) -> pd.DataFrame:
     return df
 
 
+# ---------------------------------------------------------------------------
+# Fannie Mae real-data loader
+# ---------------------------------------------------------------------------
+
+def load_fannie_mae_profiles(
+    profiles_path: str | None = None,
+) -> pd.DataFrame:
+    """
+    Load the pre-processed Fannie Mae pool profiles CSV.
+
+    The CSV is produced by ``src/ingest_fannie_mae.py`` and stored at
+    ``data/processed/fannie_mae_pool_profiles.csv`` relative to the repo root.
+
+    Returns a DataFrame with one row per rate bucket and columns:
+        rate_bucket, wac, wam, avg_ltv, avg_cltv, avg_dti, avg_fico,
+        avg_loan_size, total_balance, loan_count, top_state
+
+    Raises FileNotFoundError with a helpful message if the file hasn't been
+    generated yet, so the UI can show a clear instruction rather than crashing.
+    """
+    import os
+    from pathlib import Path
+
+    if profiles_path is None:
+        repo_root = Path(__file__).resolve().parent.parent
+        profiles_path = repo_root / "data" / "processed" / "fannie_mae_pool_profiles.csv"
+
+    profiles_path = Path(profiles_path)
+    if not profiles_path.exists():
+        raise FileNotFoundError(
+            f"Fannie Mae profile data not found at {profiles_path}.\n"
+            "Run:  python -m src.ingest_fannie_mae  to generate it."
+        )
+
+    df = pd.read_csv(profiles_path)
+
+    # Ensure clean types
+    df["wac"]           = pd.to_numeric(df["wac"],           errors="coerce")
+    df["wam"]           = pd.to_numeric(df["wam"],           errors="coerce").fillna(360).astype(int)
+    df["avg_ltv"]       = pd.to_numeric(df["avg_ltv"],       errors="coerce")
+    df["avg_loan_size"] = pd.to_numeric(df["avg_loan_size"], errors="coerce")
+    df["total_balance"] = pd.to_numeric(df["total_balance"], errors="coerce")
+    df["loan_count"]    = pd.to_numeric(df["loan_count"],    errors="coerce").fillna(0).astype(int)
+
+    return df.reset_index(drop=True)
+
+
 def cpr_decomp_df(scenario_results: list[dict]) -> pd.DataFrame:
     """
     Build a DataFrame of CPR driver decomposition across scenarios.

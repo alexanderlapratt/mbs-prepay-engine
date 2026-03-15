@@ -17,12 +17,99 @@ import pandas as pd
 
 from src.mortgage_math import amortization_schedule, remaining_balance, net_coupon
 from src.utils import fmt_currency, fmt_pct, fmt_bp
+from src.data_loader import load_fannie_mae_profiles
 from app.components.styles import inject_css, page_header, section_header, metric_row, info_box
 from app.components.charts import amortization_preview_chart, balance_decay_chart
 from app.components.tables import format_amortization_table, csv_download_button
 
 inject_css()
 page_header("Pool Setup & Amortization Preview", "Static pool parameters and scheduled cash-flow mechanics")
+
+# ── Real Fannie Mae Data Loader ───────────────────────────────────────────────
+with st.expander("📂  Load Real Fannie Mae Pool Data", expanded=False):
+    st.markdown(
+        "**Source:** Fannie Mae Single-Family Loan Performance Data, 2024 Q1  \n"
+        "Select a rate bucket below to auto-populate the sidebar controls "
+        "with WAC, WAM, and a representative balance derived from real originations."
+    )
+
+    _fnma_loaded = False
+    _fnma_profiles = None
+
+    try:
+        _fnma_profiles = load_fannie_mae_profiles()
+        _fnma_loaded = True
+    except FileNotFoundError as _e:
+        st.warning(
+            f"Pool profile data not found.  "
+            f"Run `python -m src.ingest_fannie_mae` from the repo root to generate it.\n\n"
+            f"_{_e}_"
+        )
+
+    if _fnma_loaded and _fnma_profiles is not None and not _fnma_profiles.empty:
+        _bucket_options = _fnma_profiles["rate_bucket"].tolist()
+
+        _col1, _col2 = st.columns([2, 3])
+        with _col1:
+            _selected_bucket = st.selectbox(
+                "Rate Bucket",
+                options=_bucket_options,
+                index=3,           # default: 6-7% (largest 2024Q1 cohort)
+                key="fnma_bucket_select",
+                help="Groups loans by origination interest rate range.",
+            )
+
+        _row = _fnma_profiles[_fnma_profiles["rate_bucket"] == _selected_bucket].iloc[0]
+
+        with _col2:
+            st.markdown(f"""
+| Stat | Value |
+|------|-------|
+| **Loans in bucket** | {_row['loan_count']:,} |
+| **WAC** | {_row['wac']:.3f}% |
+| **Avg Loan Size** | ${_row['avg_loan_size']:,.0f} |
+| **Avg LTV** | {_row['avg_ltv']:.1f}% |
+| **Avg FICO** | {_row.get('avg_fico', 'N/A')} |
+| **Total Orig. Balance** | ${_row['total_balance']/1e9:.2f}B |
+| **Top State** | {_row['top_state']} |
+""")
+
+        _load_col, _ = st.columns([1, 3])
+        with _load_col:
+            if st.button(
+                "⬆️  Apply to Sidebar",
+                key="fnma_apply_btn",
+                help="Overwrites the sidebar WAC, WAM, and Balance sliders with values from this bucket.",
+            ):
+                # Represent the pool as a $100M slice for comparability
+                _representative_balance = 100_000_000.0
+
+                st.session_state["fnma_wac"]     = float(_row["wac"])
+                st.session_state["fnma_wam"]     = int(_row["wam"])
+                st.session_state["fnma_balance"]  = _representative_balance
+                st.session_state["fnma_bucket"]   = _selected_bucket
+                st.session_state["fnma_applied"]  = True
+                st.success(
+                    f"✅  Loaded **{_selected_bucket}** pool: "
+                    f"WAC={_row['wac']:.3f}%, WAM={int(_row['wam'])}mo, "
+                    f"Balance=$100M (representative).  "
+                    f"Return to the **Home** page sidebar and click **Run Analysis**."
+                )
+
+        if st.session_state.get("fnma_applied"):
+            _b = st.session_state.get("fnma_bucket", "")
+            _w = st.session_state.get("fnma_wac", 0)
+            st.info(
+                f"🔔  Last applied: **{_b}** bucket — WAC {_w:.3f}%.  "
+                f"Go to the Home page sidebar to update the sliders and re-run."
+            )
+
+        st.caption(
+            "Source: Fannie Mae Single-Family Loan Performance Data (SFLP), 2024 Q1.  "
+            "Pool characteristics computed from 272,963 30-year fixed-rate originations "
+            "with FICO ≥ 300, LTV > 0, and rate in [2%, 12%].  "
+            "Balance shown as $100M representative pool for engine comparability."
+        )
 
 # ── Pull state from main dashboard ──────────────────────────────────────────
 pool_params = st.session_state.get("pool_params")

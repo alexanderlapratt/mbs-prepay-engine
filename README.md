@@ -235,6 +235,54 @@ Fit the CPR S-curve parameters via maximum likelihood to FNMA/FHLMC monthly remi
 
 ---
 
+## Real Data Integration
+
+### Data Source
+
+The engine supports loading real loan-level data from the **Fannie Mae Single-Family Loan Performance (SFLP) Dataset**.  The 2024 Q1 file contains 376,447 monthly performance records across newly originated and seasoned 30-year fixed-rate mortgages.
+
+Dataset: [Fannie Mae Single-Family Loan Performance Data](https://capitalmarkets.fanniemae.com/credit-risk-transfer/single-family-credit-risk-transfer/fannie-mae-single-family-loan-performance-data)
+
+### Cleaning Pipeline (`src/ingest_fannie_mae.py`)
+
+The ingestion script applies the following filters to the raw pipe-delimited file (no header):
+
+1. **Required fields:** Drop any row missing `ORIG_INTEREST_RATE`, `ORIG_UPB`, or `ORIG_LOAN_TERM`.
+2. **Origination records only:** Keep `LOAN_AGE` in `{-1, 0, 1}` to deduplicate — the SFLP file contains monthly updates for each loan, so we keep only the first observation to get one row per unique origination.
+3. **30-year fixed:** Filter `ORIG_LOAN_TERM == 360`.
+4. **Rate range:** `ORIG_INTEREST_RATE` in `[2.0%, 12.0%]`.
+5. **Positive balance:** `ORIG_UPB > 0`.
+
+After cleaning: **272,963 loans**, **$91.1B** in original balance.
+
+### Pool Profiles by Rate Bucket
+
+Loans are grouped into 5 WAC buckets.  For each bucket the script computes WAC (balance-weighted average coupon), WAM (360 for all new originations), average LTV, average FICO, average loan size, total balance, loan count, and top state.
+
+| Bucket | Loans | WAC | Avg Loan | Avg LTV | Avg FICO | Total Bal |
+|--------|------:|----:|--------:|--------:|--------:|----------:|
+| 3-4%   |     7 | 3.789% | $291K | 53.7% | 754 | $0.0B |
+| 4-5%   | 2,083 | 4.829% | $363K | 75.8% | 768 | $0.8B |
+| 5-6%   | 20,070 | 5.752% | $341K | 74.7% | 766 | $6.9B |
+| 6-7%   | 144,942 | 6.609% | $337K | 75.5% | 763 | $48.9B |
+| 7%+    | 105,861 | 7.440% | $327K | 76.9% | 755 | $34.6B |
+
+The 6-7% bucket dominates 2024 Q1 originations, reflecting the rate environment of late 2023 / early 2024 (~6.5-7% 30-year mortgage rates).
+
+### How to Run the Ingestion Script
+
+```bash
+# From the repo root, with the raw FNMA file accessible:
+python -m src.ingest_fannie_mae --input path/to/2024Q1.csv
+
+# Output is written to:
+# data/processed/fannie_mae_pool_profiles.csv
+```
+
+Once generated, the **Pool Setup** page (Page 1) shows a "Load Real Fannie Mae Pool Data" panel where you can select a rate bucket and apply its WAC/WAM to the sidebar controls.
+
+---
+
 ## How to Run Locally
 
 ```bash
