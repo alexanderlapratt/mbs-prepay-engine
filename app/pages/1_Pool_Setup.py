@@ -17,8 +17,14 @@ import pandas as pd
 
 from src.mortgage_math import amortization_schedule, remaining_balance, net_coupon
 from src.utils import fmt_currency, fmt_pct, fmt_bp
-from src.data_loader import load_fannie_mae_profiles
 from app.components.styles import inject_css, page_header, section_header, metric_row, info_box
+
+DATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'processed', 'fannie_mae_pool_profiles.csv')
+
+def load_fannie_mae_profiles():
+    if os.path.exists(DATA_PATH):
+        return pd.read_csv(DATA_PATH)
+    return None
 from app.components.charts import amortization_preview_chart, balance_decay_chart
 from app.components.tables import format_amortization_table, csv_download_button
 
@@ -33,17 +39,13 @@ with st.expander("📂  Load Real Fannie Mae Pool Data", expanded=False):
         "with WAC, WAM, and a representative balance derived from real originations."
     )
 
-    _fnma_loaded = False
-    _fnma_profiles = None
+    _fnma_profiles = load_fannie_mae_profiles()
+    _fnma_loaded = _fnma_profiles is not None
 
-    try:
-        _fnma_profiles = load_fannie_mae_profiles()
-        _fnma_loaded = True
-    except FileNotFoundError as _e:
+    if not _fnma_loaded:
         st.warning(
-            f"Pool profile data not found.  "
-            f"Run `python -m src.ingest_fannie_mae` from the repo root to generate it.\n\n"
-            f"_{_e}_"
+            "Pool profile data not found.  "
+            "Run `python -m src.ingest_fannie_mae` from the repo root to generate it."
         )
 
     if _fnma_loaded and _fnma_profiles is not None and not _fnma_profiles.empty:
