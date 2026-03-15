@@ -50,12 +50,12 @@ Pool Inputs (WAC, WAM, Pool Age, Balance, Rate)
         │
         ▼
 ┌───────────────────┐
-│  mortgage_math.py  │  Scheduled payment / interest / principal (Steps 1–3)
+│  mortgage_math.py  │  Scheduled payment / interest / principal 
 └───────────────────┘
         │
         ▼
 ┌───────────────────────────────┐
-│          cpr_model.py          │  Multi-factor CPR (Step 4)
+│          cpr_model.py          │  Multi-factor CPR 
 │  • Refi incentive (S-curve)    │
 │  • Seasoning ramp (PSA)        │
 │  • Burnout dampening           │
@@ -66,12 +66,12 @@ Pool Inputs (WAC, WAM, Pool Age, Balance, Rate)
         │
         ▼
 ┌──────────────────────┐
-│  cashflow_engine.py   │  SMM → Prepayment → Balance → WAL (Steps 5–9)
+│  cashflow_engine.py   │  SMM → Prepayment → Balance → WAL 
 └──────────────────────┘
         │
         ▼
 ┌─────────────────────┐
-│   risk_engine.py     │  Price, Eff. Duration, Convexity, DV01 (Steps 10–11)
+│   risk_engine.py     │  Price, Eff. Duration, Convexity, DV01
 │   (bump-and-reprice) │
 └─────────────────────┘
         │
@@ -318,8 +318,8 @@ mbs-prepay-engine/
 
 ## Author
 
-**Alex LaPrott**
-Yale University — BS Computer Science & Mathematics (4.0 Major GPA)
-[alex.lapratt@gmail.com](mailto:alex.lapratt@gmail.com)
+**Alexander LaPratt**
+Yale University — BS Computer Science & Mathematics 
+[alexander.lapratt@yale.edu](mailto:alexander.lapratt@yale.edu)
 
 _Built March 2026 as a technical demonstration of MBS analytics._
