@@ -16,7 +16,8 @@
 Agency MBS (mortgage-backed securities) are the largest fixed-income market in the world, yet their analytics are fundamentally different from bullet bonds.  The embedded prepayment option creates **negative convexity** — a property that makes standard duration/convexity tools inadequate.
 
 This project builds a complete, deployable prepayment and cash-flow engine that:
-- Lets a user configure a stylized mortgage pool
+- Supports both user-defined stylized pools and real loan-level data from the **Fannie Mae Single-Family Loan Performance Data (SFLP), 2024 Q1** (272,963 loans, $91.1B in originations)
+- Lets a user configure a stylized mortgage pool or load a real FNMA rate bucket with one click
 - Projects monthly cash flows across 8 rate scenarios
 - Computes WAL, effective duration, convexity, DV01, and hedge ratios
 - Explains every formula and the key limitations vs. a production system
@@ -189,17 +190,15 @@ _[Screenshots to be added after deployment]_
 
 ## Key Findings: Duration Behavior Across Rate Scenarios
 
-Running the engine on the sample FNMA 30Y 6.5% pool (24-month seasoned, $100M):
+Running the engine on the **Fannie Mae 6–7% bucket** (WAC 6.609%, 2024 Q1, $100M representative pool):
 
-| Scenario | WAL (yr) | Price | Eff. Duration | Convexity |
-|----------|----------|-------|---------------|-----------|
-| Down 100bp | ~3.5 | ~102.5 | ~3.0 | < 0 |
-| Down 50bp  | ~4.5 | ~101.2 | ~3.8 | < 0 |
-| Base       | ~6.0 | ~100.0 | ~5.5 | < 0 |
-| Up 50bp    | ~7.5 | ~98.0  | ~6.5 | < 0 |
-| Up 100bp   | ~9.5 | ~95.5  | ~7.5 | < 0 |
-
-_Exact values depend on pool parameters — run the dashboard for live numbers._
+| Scenario   | WAL (yr) | Price   | Eff. Duration | Convexity  |
+|------------|--------:|--------:|--------------:|-----------:|
+| Down 100bp |    2.38  | 101.849 |         2.040 |   23.976   |
+| Down 50bp  |    2.98  | 100.952 |         2.671 | –152.286   |
+| Base       |    7.14  |  99.372 |         5.386 | –770.885   |
+| Up 50bp    |   11.22  |  95.738 |         7.076 |  168.794   |
+| Up 100bp   |   11.22  |  92.553 |         6.684 |   79.259   |
 
 **Key observation:** The pool extends 3+ years in a 100bp selloff and contracts 2.5+ years in a 100bp rally.  This extension/contraction asymmetry — negative convexity — means duration risk is greater in selloffs, which is when investors can least afford it.
 
@@ -239,47 +238,57 @@ Fit the CPR S-curve parameters via maximum likelihood to FNMA/FHLMC monthly remi
 
 ### Data Source
 
-The engine supports loading real loan-level data from the **Fannie Mae Single-Family Loan Performance (SFLP) Dataset**.  The 2024 Q1 file contains 376,447 monthly performance records across newly originated and seasoned 30-year fixed-rate mortgages.
+The engine ingests real loan-level data from the **Fannie Mae Single-Family Loan Performance (SFLP) Dataset**, 2024 Q1.
 
-Dataset: [Fannie Mae Single-Family Loan Performance Data](https://capitalmarkets.fanniemae.com/credit-risk-transfer/single-family-credit-risk-transfer/fannie-mae-single-family-loan-performance-data)
+Available free at: [capitalmarkets.fanniemae.com](https://capitalmarkets.fanniemae.com/credit-risk-transfer/single-family-credit-risk-transfer/fannie-mae-single-family-loan-performance-data)
 
-### Cleaning Pipeline (`src/ingest_fannie_mae.py`)
+The dataset contains loan-level performance data for fixed-rate agency MBS pools with 110 pipe-delimited fields and no column headers.
 
-The ingestion script applies the following filters to the raw pipe-delimited file (no header):
+### Data Cleaning Pipeline (`src/ingest_fannie_mae.py`)
 
-1. **Required fields:** Drop any row missing `ORIG_INTEREST_RATE`, `ORIG_UPB`, or `ORIG_LOAN_TERM`.
-2. **Origination records only:** Keep `LOAN_AGE` in `{-1, 0, 1}` to deduplicate — the SFLP file contains monthly updates for each loan, so we keep only the first observation to get one row per unique origination.
-3. **30-year fixed:** Filter `ORIG_LOAN_TERM == 360`.
-4. **Rate range:** `ORIG_INTEREST_RATE` in `[2.0%, 12.0%]`.
-5. **Positive balance:** `ORIG_UPB > 0`.
+The ingestion script performs the following steps:
 
-After cleaning: **272,963 loans**, **$91.1B** in original balance.
+1. Reads the raw pipe-delimited CSV with no headers
+2. Assigns the 110 standard SFLP column names
+3. Corrects an offset in the raw file layout (current UPB field at position 11 requires a column label swap)
+4. Filters to 30-year fixed-rate loans only (`ORIG_LOAN_TERM = 360`)
+5. Removes loans with null `ORIG_INTEREST_RATE`, `ORIG_UPB`, or `ORIG_LOAN_TERM`
+6. Removes loans with `ORIG_INTEREST_RATE` outside 2.0–12.0%
+7. Removes loans with `ORIG_UPB <= 0`
+8. Groups remaining loans into 5 rate buckets: 3–4%, 4–5%, 5–6%, 6–7%, 7%+
+9. Computes pool-level aggregates per bucket: WAC (weighted by UPB), average LTV, average FICO, average loan size, total balance, loan count, top state
 
-### Pool Profiles by Rate Bucket
+### Pool Profiles Output
 
-Loans are grouped into 5 WAC buckets.  For each bucket the script computes WAC (balance-weighted average coupon), WAM (360 for all new originations), average LTV, average FICO, average loan size, total balance, loan count, and top state.
+| Bucket | Loans | WAC | Avg Loan | Avg LTV | Avg FICO | Total Balance | Top State |
+|--------|------:|----:|--------:|--------:|--------:|----------:|------:|
+| 3–4%   |       7 | 3.789% | $291.3K | 53.7% | 754 | $0.00B | LA |
+| 4–5%   |   2,083 | 4.829% | $363.2K | 75.8% | 768 | $0.76B | TX |
+| 5–6%   |  20,070 | 5.752% | $341.1K | 74.7% | 766 | $6.85B | TX |
+| 6–7%   | 144,942 | 6.609% | $337.3K | 75.5% | 763 | $48.89B | TX |
+| 7%+    | 105,861 | 7.440% | $326.9K | 76.9% | 755 | $34.60B | TX |
 
-| Bucket | Loans | WAC | Avg Loan | Avg LTV | Avg FICO | Total Bal |
-|--------|------:|----:|--------:|--------:|--------:|----------:|
-| 3-4%   |     7 | 3.789% | $291K | 53.7% | 754 | $0.0B |
-| 4-5%   | 2,083 | 4.829% | $363K | 75.8% | 768 | $0.8B |
-| 5-6%   | 20,070 | 5.752% | $341K | 74.7% | 766 | $6.9B |
-| 6-7%   | 144,942 | 6.609% | $337K | 75.5% | 763 | $48.9B |
-| 7%+    | 105,861 | 7.440% | $327K | 76.9% | 755 | $34.6B |
+The 6–7% bucket dominates 2024 Q1 originations, reflecting the prevailing 30-year fixed mortgage rate environment of late 2023 / early 2024.
 
-The 6-7% bucket dominates 2024 Q1 originations, reflecting the rate environment of late 2023 / early 2024 (~6.5-7% 30-year mortgage rates).
-
-### How to Run the Ingestion Script
+### How to Run the Ingestion Pipeline
 
 ```bash
-# From the repo root, with the raw FNMA file accessible:
-python -m src.ingest_fannie_mae --input path/to/2024Q1.csv
-
-# Output is written to:
-# data/processed/fannie_mae_pool_profiles.csv
+# Download 2024Q1.csv from Fannie Mae SFLP or Kaggle
+# Place it in your local directory
+# Run the ingestion script
+python src/ingest_fannie_mae.py
+# Output saved to data/processed/fannie_mae_pool_profiles.csv
 ```
 
-Once generated, the **Pool Setup** page (Page 1) shows a "Load Real Fannie Mae Pool Data" panel where you can select a rate bucket and apply its WAC/WAM to the sidebar controls.
+### How to Load Real Data in the App
+
+1. Navigate to the **Pool Setup** page
+2. Open the **"Load Real Fannie Mae Pool Data"** expander at the top
+3. Select a rate bucket from the dropdown
+4. Review the pool statistics (loans, WAC, LTV, FICO, balance)
+5. Click **"Apply to Sidebar"**
+6. Navigate to the **Dashboard** and click **Run Analysis**
+7. All analytics now reflect real 2024 Q1 origination characteristics
 
 ---
 
@@ -297,8 +306,13 @@ source .venv/bin/activate   # Windows: .venv\Scripts\activate
 # Install dependencies
 pip install -r requirements.txt
 
+# (Optional) Run the Fannie Mae data ingestion pipeline
+# Requires 2024Q1.csv placed in your working directory
+python src/ingest_fannie_mae.py
+# Output: data/processed/fannie_mae_pool_profiles.csv
+
 # Run the dashboard
-streamlit run app/Dashboard.py
+streamlit run app/dashboard.py
 
 # Run the tests
 pytest tests/ -v
@@ -370,4 +384,4 @@ mbs-prepay-engine/
 Yale University — BS Computer Science & Mathematics (4.0 Major GPA)
 [alexander.lapratt@yale.edu](mailto:alexander.lapratt@yale.edu)
 
-_Built March 2026 as a technical demonstration of MBS analytics._
+_Built March 2026 as a technical demonstration of agency MBS analytics, incorporating real Fannie Mae Single-Family Loan Performance Data._
