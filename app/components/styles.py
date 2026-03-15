@@ -211,13 +211,23 @@ MOBILE_CSS = """
     .stCaption, small { font-size: 0.7rem !important; }
 }
 
-/* ── Mobile: sidebar visibility fix — prevent bleed-through onto main content ── */
+/* ── Mobile: sidebar — off-screen by default, overlays as fixed panel when expanded ── */
 @media (max-width: 768px) {
-    /* Force sidebar to be completely hidden by default on mobile */
-    [data-testid="stSidebar"] {
+    /* Sidebar starts off-screen on mobile but can slide in when toggled */
+    [data-testid="stSidebar"][aria-expanded="false"] {
         display: none !important;
-        width: 0px !important;
-        min-width: 0px !important;
+    }
+
+    [data-testid="stSidebar"][aria-expanded="true"] {
+        display: flex !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        height: 100vh !important;
+        width: 80vw !important;
+        max-width: 320px !important;
+        z-index: 9999 !important;
+        overflow-y: auto !important;
     }
 
     /* Ensure main content takes full width on mobile */
@@ -225,11 +235,6 @@ MOBILE_CSS = """
         margin-left: 0px !important;
         padding-left: 1rem !important;
         padding-right: 1rem !important;
-    }
-
-    /* Hide sidebar collapse button on mobile */
-    [data-testid="collapsedControl"] {
-        display: none !important;
     }
 
     /* Make metric cards stack properly */
@@ -240,32 +245,6 @@ MOBILE_CSS = """
     /* Make tables scroll horizontally */
     [data-testid="stDataFrame"] {
         overflow-x: auto !important;
-    }
-}
-
-/* ── Mobile: sidebar — hidden by default, overlays when opened ──
-   On narrow viewports the sidebar slides in from the left only when
-   the user taps the hamburger toggle (aria-expanded="true").        */
-@media screen and (max-width: 768px) {
-    section[data-testid="stSidebar"] {
-        transform:  translateX(-110%)           !important;
-        transition: transform 0.3s ease         !important;
-        position:   fixed                       !important;
-        top:        0                           !important;
-        left:       0                           !important;
-        height:     100vh                       !important;
-        width:      min(85vw, 360px)            !important;
-        min-width:  unset                       !important;
-        z-index:    999                         !important;
-        box-shadow: 4px 0 24px rgba(0,0,0,0.6) !important;
-    }
-    section[data-testid="stSidebar"][aria-expanded="true"] {
-        transform: translateX(0) !important;
-    }
-    [data-testid="stSidebar"] .stSlider,
-    [data-testid="stSidebar"] .stSelectbox,
-    [data-testid="stSidebar"] .stNumberInput {
-        font-size: 0.875rem !important;
     }
 }
 
