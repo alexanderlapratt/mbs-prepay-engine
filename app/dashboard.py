@@ -86,6 +86,30 @@ seed_pool = get_seed_pool() or {}
 
 
 # ---------------------------------------------------------------------------
+# FNMA pool profiles — loaded once for the sidebar data source toggle
+# ---------------------------------------------------------------------------
+
+_FNMA_PROFILE_PATH = os.path.join(
+    os.path.dirname(__file__), '..', 'data', 'processed', 'fannie_mae_pool_profiles.csv'
+)
+
+
+@st.cache_data(ttl=3600)
+def _load_fnma_sidebar_profiles():
+    """Load pre-computed FNMA rate-bucket profiles for the sidebar toggle."""
+    if os.path.exists(_FNMA_PROFILE_PATH):
+        return pd.read_csv(_FNMA_PROFILE_PATH)
+    return None
+
+
+_fnma_sidebar_profiles = _load_fnma_sidebar_profiles()
+_FNMA_BUCKETS = (
+    _fnma_sidebar_profiles["rate_bucket"].tolist()
+    if _fnma_sidebar_profiles is not None else []
+)
+
+
+# ---------------------------------------------------------------------------
 # Sidebar — Pool Input Controls
 # ---------------------------------------------------------------------------
 
@@ -107,6 +131,8 @@ if "_sb_wac_pct" not in st.session_state:
     st.session_state["_sb_wac_pct"] = round(float(seed_pool.get("wac", 0.065)) * 100, 3)
 if "_sb_wam" not in st.session_state:
     st.session_state["_sb_wam"] = int(seed_pool.get("wam", 360))
+if "_sb_data_source" not in st.session_state:
+    st.session_state["_sb_data_source"] = "Manual Configuration"
 
 # ── Overwrite with Fannie Mae values if "Apply to Sidebar" was clicked ──
 if "fnma_balance" in st.session_state:
@@ -126,16 +152,55 @@ if "fnma_wam" in st.session_state:
 
 
 with st.sidebar:
+    # ── Data Source Toggle ────────────────────────────────────────────────────
+    data_source = st.radio(
+        "Data Source",
+        options=["Manual Configuration", "Fannie Mae 2024 Q1"],
+        key="_sb_data_source",
+        horizontal=True,
+    )
+
+    if data_source == "Fannie Mae 2024 Q1":
+        if _fnma_sidebar_profiles is not None and not _fnma_sidebar_profiles.empty:
+            _sb_bucket = st.selectbox(
+                "Rate Bucket",
+                options=_FNMA_BUCKETS,
+                index=min(3, len(_FNMA_BUCKETS) - 1),
+                key="_sb_fnma_bucket",
+                help="2024 Q1 origination cohort grouped by interest rate range.",
+            )
+            _sb_row = _fnma_sidebar_profiles[
+                _fnma_sidebar_profiles["rate_bucket"] == _sb_bucket
+            ].iloc[0]
+            # Auto-populate slider keys before widgets render
+            _wac_snapped = round(round(float(_sb_row["wac"]) / 0.125) * 0.125, 3)
+            st.session_state["_sb_wac_pct"] = max(2.0, min(12.0, _wac_snapped))
+            st.session_state["_sb_wam"]     = int(_sb_row["wam"])
+            st.session_state["_sb_balance"] = 100_000_000
+            st.session_state["fnma_applied"] = True
+            st.session_state["fnma_bucket"]  = _sb_bucket
+            st.success(
+                f"📂 FNMA **{_sb_bucket}** · WAC {_sb_row['wac']:.3f}% · "
+                f"{int(_sb_row['loan_count']):,} loans · "
+                f"${_sb_row['total_balance'] / 1e9:.1f}B",
+                icon=None,
+            )
+        else:
+            st.warning(
+                "Profile data not found. "
+                "Run `python src/ingest_fannie_mae.py` to generate it.",
+            )
+    else:
+        # Manual mode — clear the FNMA applied banner
+        st.session_state.pop("fnma_applied", None)
+
+    st.divider()
+
     st.markdown(
         "<h2 style='color:#00D4FF; margin-bottom:4px;'>📊 Pool Configuration</h2>",
         unsafe_allow_html=True,
     )
     st.caption("Adjust parameters and click **Run Analysis**")
-
-    # Show a notice when Fannie Mae values have been loaded
-    if st.session_state.get("fnma_applied"):
-        _bucket = st.session_state.get("fnma_bucket", "")
-        st.success(f"📂 FNMA data loaded: **{_bucket}** bucket", icon=None)
 
     st.divider()
 

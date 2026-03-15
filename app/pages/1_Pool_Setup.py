@@ -33,11 +33,18 @@ inject_mobile_css()
 page_header("Pool Setup & Amortization Preview", "Static pool parameters and scheduled cash-flow mechanics")
 
 # ── Real Fannie Mae Data Loader ───────────────────────────────────────────────
-with st.expander("📂  Load Real Fannie Mae Pool Data", expanded=False):
+with st.expander("📂  Fannie Mae Pool Data", expanded=False):
+    st.info(
+        "**Primary method:** Use the **Data Source** toggle at the top of the sidebar "
+        "to switch between Manual Configuration and Fannie Mae 2024 Q1 — "
+        "it auto-populates WAC, WAM, and balance immediately without this button.  \n\n"
+        "The loader below is a secondary option if you want to preview bucket stats "
+        "before applying.",
+        icon="💡",
+    )
     st.markdown(
         "**Source:** Fannie Mae Single-Family Loan Performance Data, 2024 Q1  \n"
-        "Select a rate bucket below to auto-populate the sidebar controls "
-        "with WAC, WAM, and a representative balance derived from real originations."
+        "Select a rate bucket and click **Apply to Sidebar** to update the sidebar controls."
     )
 
     _fnma_profiles = load_fannie_mae_profiles()
@@ -87,11 +94,14 @@ with st.expander("📂  Load Real Fannie Mae Pool Data", expanded=False):
                 # Represent the pool as a $100M slice for comparability
                 _representative_balance = 100_000_000.0
 
-                st.session_state["fnma_wac"]     = float(_row["wac"])
-                st.session_state["fnma_wam"]     = int(_row["wam"])
-                st.session_state["fnma_balance"]  = _representative_balance
-                st.session_state["fnma_bucket"]   = _selected_bucket
-                st.session_state["fnma_applied"]  = True
+                st.session_state["fnma_wac"]        = float(_row["wac"])
+                st.session_state["fnma_wam"]        = int(_row["wam"])
+                st.session_state["fnma_balance"]    = _representative_balance
+                st.session_state["fnma_bucket"]     = _selected_bucket
+                st.session_state["fnma_applied"]    = True
+                # Sync the sidebar data source toggle so it reflects Fannie Mae mode
+                st.session_state["_sb_data_source"] = "Fannie Mae 2024 Q1"
+                st.session_state["_sb_fnma_bucket"] = _selected_bucket
                 st.success(
                     f"✅  Loaded **{_selected_bucket}** pool: "
                     f"WAC={_row['wac']:.3f}%, WAM={int(_row['wam'])}mo, "
