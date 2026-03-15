@@ -98,7 +98,7 @@ def balance_decay_chart(df: pd.DataFrame) -> go.Figure:
         x=df["period"], y=df["ending_balance"] / 1e6,
         mode="lines", name="Remaining Balance",
         line=dict(color=PRIMARY_COLOR, width=2),
-        fill="tozeroy", fillcolor="#00D4FF11",
+        fill="tozeroy", fillcolor="rgba(0,212,255,0.07)",
     )
     fig.update_layout(
         title="Balance Decay — Scheduled Amortization",
@@ -209,19 +209,19 @@ def cashflow_waterfall_chart(df: pd.DataFrame) -> go.Figure:
         x=df["year_frac"], y=df["interest"] / 1e6,
         mode="lines", name="Interest",
         stackgroup="cf", line=dict(color="#00D4FF", width=0.5),
-        fillcolor="#00D4FF55",
+        fillcolor="rgba(0,212,255,0.33)",
     )
     fig.add_scatter(
         x=df["year_frac"], y=df["scheduled_principal"] / 1e6,
         mode="lines", name="Scheduled Principal",
         stackgroup="cf", line=dict(color=SUCCESS_COLOR, width=0.5),
-        fillcolor="#00FF8855",
+        fillcolor="rgba(0,255,136,0.33)",
     )
     fig.add_scatter(
         x=df["year_frac"], y=df["prepayment"] / 1e6,
         mode="lines", name="Prepayment",
         stackgroup="cf", line=dict(color=WARNING_COLOR, width=0.5),
-        fillcolor="#FFB80055",
+        fillcolor="rgba(255,184,0,0.33)",
     )
     fig.update_layout(
         title="Monthly Cash Flow Waterfall",
@@ -347,7 +347,7 @@ def duration_convexity_chart(df: pd.DataFrame) -> go.Figure:
         marker=dict(size=8, color=DANGER_COLOR),
         secondary_y=True,
     )
-    fig.add_hline(y=0, line_dash="dash", line_color="#FFFFFF44",
+    fig.add_hline(y=0, line_dash="dash", line_color="rgba(255,255,255,0.27)",
                   annotation_text="Zero Convexity", secondary_y=True)
     fig.update_yaxes(title_text="Effective Duration (years)", secondary_y=False,
                      gridcolor=GRID_COLOR)
