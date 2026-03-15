@@ -1,7 +1,7 @@
 """
-dashboard.py — Main Streamlit entry point for the MBS Prepayment Engine.
+Dashboard.py — Main Streamlit entry point for the MBS Prepayment Engine.
 
-Run with:  streamlit run app/dashboard.py
+Run with:  streamlit run app/Dashboard.py
 
 This file handles:
   - App-wide configuration (page title, icon, layout)
