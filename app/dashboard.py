@@ -32,7 +32,7 @@ from src.config import (
     APP_TITLE,
     DEFAULT_SCENARIOS,
 )
-from app.components.styles import inject_css, page_header
+from app.components.styles import inject_css, inject_mobile_css, page_header
 
 
 # ---------------------------------------------------------------------------
@@ -43,7 +43,7 @@ st.set_page_config(
     page_title="MBS Prepayment Engine",
     page_icon="📊",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",   # collapsed by default → better on mobile
     menu_items={
         "Get Help":     "https://github.com/username/mbs-prepay-engine",
         "Report a bug": "https://github.com/username/mbs-prepay-engine/issues",
@@ -52,6 +52,7 @@ st.set_page_config(
 )
 
 inject_css()
+inject_mobile_css()
 
 # ---------------------------------------------------------------------------
 # Database initialization (runs once per session)
@@ -88,12 +89,42 @@ seed_pool = get_seed_pool() or {}
 # Sidebar — Pool Input Controls
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# Pre-populate sidebar sliders from Fannie Mae "Apply to Sidebar" button
+# ---------------------------------------------------------------------------
+# When the user clicks "Apply to Sidebar" on the Pool Setup page it writes
+# fnma_balance / fnma_wac / fnma_wam into session_state.  We pop those values
+# here (before the widgets render) and write them into the widget keys so
+# Streamlit picks them up on the next rerun.  Using pop() ensures the values
+# are applied exactly once — subsequent reruns use whatever the user sets.
+
+if "fnma_balance" in st.session_state:
+    _v = max(1_000_000, min(10_000_000_000, int(st.session_state.pop("fnma_balance"))))
+    st.session_state["_sb_balance"] = _v
+
+if "fnma_wac" in st.session_state:
+    _v = round(float(st.session_state.pop("fnma_wac")) * 100, 3)
+    _v = round(_v / 0.125) * 0.125          # snap to slider step
+    st.session_state["_sb_wac_pct"] = max(2.0, min(12.0, _v))
+
+if "fnma_wam" in st.session_state:
+    _v = int(st.session_state.pop("fnma_wam"))
+    _v = max(60, min(360, round(_v / 12) * 12))  # snap to multiple of 12
+    st.session_state["_sb_wam"] = _v
+
+
 with st.sidebar:
     st.markdown(
         "<h2 style='color:#00D4FF; margin-bottom:4px;'>📊 Pool Configuration</h2>",
         unsafe_allow_html=True,
     )
     st.caption("Adjust parameters and click **Run Analysis**")
+
+    # Show a notice when Fannie Mae values have been loaded
+    if st.session_state.get("fnma_applied"):
+        _bucket = st.session_state.get("fnma_bucket", "")
+        st.success(f"📂 FNMA data loaded: **{_bucket}** bucket", icon=None)
+
     st.divider()
 
     # ── Balance & Term ──────────────────────────────────────────────────────
@@ -106,6 +137,7 @@ with st.sidebar:
         value=int(seed_pool.get("original_balance", 100_000_000)),
         step=1_000_000,
         format="%d",
+        key="_sb_balance",
         help="Original unpaid principal balance of the pool at issuance.",
     )
 
@@ -114,6 +146,7 @@ with st.sidebar:
         min_value=2.0, max_value=12.0,
         value=float(seed_pool.get("wac", 0.065)) * 100,
         step=0.125,
+        key="_sb_wac_pct",
         help="Weighted average coupon (gross, before servicing fee).",
     )
     wac = wac_pct / 100.0
@@ -123,6 +156,7 @@ with st.sidebar:
         min_value=60, max_value=360,
         value=int(seed_pool.get("wam", 360)),
         step=12,
+        key="_sb_wam",
         help="Original weighted average maturity in months.",
     )
 

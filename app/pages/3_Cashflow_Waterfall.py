@@ -16,7 +16,7 @@ import streamlit as st
 import pandas as pd
 
 from src.data_loader import cashflows_to_df, multi_scenario_balance_df
-from app.components.styles import inject_css, page_header, section_header, info_box, metric_row
+from app.components.styles import inject_css, inject_mobile_css, page_header, section_header, info_box, metric_row
 from app.components.charts import (
     cashflow_waterfall_chart,
     remaining_balance_chart,
@@ -25,6 +25,7 @@ from app.components.charts import (
 from app.components.tables import format_cashflow_table, csv_download_button
 
 inject_css()
+inject_mobile_css()
 page_header("Cash Flow Waterfall", "Monthly interest, scheduled principal, and prepayment breakdown")
 
 # ── Pull state ──────────────────────────────────────────────────────────────

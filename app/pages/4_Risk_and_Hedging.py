@@ -20,7 +20,7 @@ import pandas as pd
 from src.data_loader import scenario_results_to_df, risk_metrics_for_chart
 from src.hedge_engine import build_hedge_summary
 from app.components.styles import (
-    inject_css, page_header, section_header, info_box,
+    inject_css, inject_mobile_css, page_header, section_header, info_box,
     metric_row, warning_box, colored_badge,
 )
 from app.components.charts import (
@@ -32,6 +32,7 @@ from app.components.charts import (
 from app.components.tables import format_scenario_summary, format_hedge_table, csv_download_button
 
 inject_css()
+inject_mobile_css()
 page_header("Risk & Hedging", "Price, WAL, effective duration, convexity, and DV01-based hedge ratios")
 
 # ── Pull state ──────────────────────────────────────────────────────────────

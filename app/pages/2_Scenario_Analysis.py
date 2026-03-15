@@ -22,7 +22,7 @@ from src.data_loader import (
     scenario_results_to_df,
 )
 from src.cpr_model import cpr_driver_decomposition
-from app.components.styles import inject_css, page_header, section_header, info_box
+from app.components.styles import inject_css, inject_mobile_css, page_header, section_header, info_box
 from app.components.charts import (
     cpr_by_scenario_chart,
     refi_incentive_chart,
@@ -31,6 +31,7 @@ from app.components.charts import (
 from app.components.tables import format_decomp_table, csv_download_button
 
 inject_css()
+inject_mobile_css()
 page_header("Scenario Analysis", "CPR speed, SMM, and prepayment driver decomposition across 8 rate scenarios")
 
 # ── Pull state ──────────────────────────────────────────────────────────────

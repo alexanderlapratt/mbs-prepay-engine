@@ -17,7 +17,7 @@ import pandas as pd
 
 from src.mortgage_math import amortization_schedule, remaining_balance, net_coupon
 from src.utils import fmt_currency, fmt_pct, fmt_bp
-from app.components.styles import inject_css, page_header, section_header, metric_row, info_box
+from app.components.styles import inject_css, inject_mobile_css, page_header, section_header, metric_row, info_box
 
 DATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'processed', 'fannie_mae_pool_profiles.csv')
 
@@ -29,6 +29,7 @@ from app.components.charts import amortization_preview_chart, balance_decay_char
 from app.components.tables import format_amortization_table, csv_download_button
 
 inject_css()
+inject_mobile_css()
 page_header("Pool Setup & Amortization Preview", "Static pool parameters and scheduled cash-flow mechanics")
 
 # ── Real Fannie Mae Data Loader ───────────────────────────────────────────────

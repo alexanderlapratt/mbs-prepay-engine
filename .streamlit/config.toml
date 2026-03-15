@@ -1,22 +1,25 @@
 [theme]
-base            = "dark"
-primaryColor    = "#00D4FF"
-backgroundColor = "#0E0E1A"
+base                     = "dark"
+primaryColor             = "#00D4FF"
+backgroundColor          = "#0E0E1A"
 secondaryBackgroundColor = "#13131F"
-textColor       = "#E0E0F0"
-font            = "sans serif"
+textColor                = "#E0E0F0"
+font                     = "sans serif"
 
 [server]
-headless        = true
-enableCORS      = false
+headless             = true
+enableCORS           = false
 enableXsrfProtection = true
+# maxUploadSize and maxMessageSize kept at defaults (200 MB)
 
 [browser]
 gatherUsageStats = false
 
 [runner]
-magicEnabled    = false
+magicEnabled = false
 
 [client]
 showErrorDetails = true
-toolbarMode      = "viewer"
+# "minimal" hides the Streamlit top toolbar, giving more vertical space
+# on narrow/mobile screens where every pixel counts.
+toolbarMode      = "minimal"

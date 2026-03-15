@@ -99,10 +99,173 @@ hr { border-color: #2A2A3E; }
 </style>
 """
 
+# ---------------------------------------------------------------------------
+# Mobile-responsive CSS (separate constant so pages can inject independently)
+# ---------------------------------------------------------------------------
+
+MOBILE_CSS = """
+<style>
+/* ============================================================
+   MOBILE RESPONSIVE — breakpoint 768px
+   Call inject_mobile_css() on every page for consistent scaling
+   ============================================================ */
+
+/* ── Mobile: main container ── */
+@media screen and (max-width: 768px) {
+    .main .block-container {
+        padding-top: 0.75rem !important;
+        padding-left: 0.5rem  !important;
+        padding-right: 0.5rem !important;
+        max-width: 100vw      !important;
+    }
+}
+
+/* ── Mobile: typography scale-down ── */
+@media screen and (max-width: 768px) {
+    h1 { font-size: 1.35rem !important; }
+    h2 { font-size: 1.15rem !important; }
+    h3 { font-size: 1.0rem  !important; }
+    p, li { font-size: 0.875rem; }
+}
+
+/* ── Mobile: metric cards ── */
+@media screen and (max-width: 768px) {
+    [data-testid="stMetric"] {
+        padding: 8px 10px !important;
+    }
+    [data-testid="stMetricValue"] { font-size: 1.05rem !important; }
+    [data-testid="stMetricLabel"] { font-size: 0.65rem !important; }
+    [data-testid="stMetricDelta"] { font-size: 0.65rem !important; }
+}
+
+/* ── Mobile: DataFrames — horizontal scroll ── */
+@media screen and (max-width: 768px) {
+    [data-testid="stDataFrame"],
+    [data-testid="stDataFrame"] > div,
+    .dvn-scroller {
+        overflow-x: auto                  !important;
+        -webkit-overflow-scrolling: touch !important;
+        max-width: calc(100vw - 1rem)     !important;
+    }
+}
+
+/* ── Mobile: Plotly charts — full width ── */
+@media screen and (max-width: 768px) {
+    [data-testid="stPlotlyChart"],
+    .js-plotly-plot,
+    .plot-container {
+        width:     100%  !important;
+        max-width: 100vw !important;
+    }
+    .js-plotly-plot .plotly svg {
+        width:  100% !important;
+        height: auto !important;
+    }
+}
+
+/* ── Mobile: columns — stack on very small screens ── */
+@media screen and (max-width: 480px) {
+    [data-testid="column"] {
+        width:     100% !important;
+        flex:      1 1 100% !important;
+        min-width: 100% !important;
+    }
+}
+
+/* ── Mobile: tabs — horizontal scroll, smaller text ── */
+@media screen and (max-width: 768px) {
+    [data-baseweb="tab-list"] {
+        overflow-x: auto                  !important;
+        -webkit-overflow-scrolling: touch !important;
+        flex-wrap: nowrap                 !important;
+    }
+    [data-baseweb="tab"] {
+        font-size:   0.75rem !important;
+        padding:     6px 8px !important;
+        white-space: nowrap  !important;
+    }
+}
+
+/* ── Mobile: buttons — full width ── */
+@media screen and (max-width: 768px) {
+    .stButton > button {
+        width:     100%     !important;
+        font-size: 0.875rem !important;
+        padding:   8px 12px !important;
+    }
+}
+
+/* ── Mobile: code / pre blocks ── */
+@media screen and (max-width: 768px) {
+    pre {
+        font-size:   0.75rem    !important;
+        white-space: pre-wrap   !important;
+        word-break:  break-word !important;
+        overflow-x:  auto       !important;
+    }
+    code { font-size: 0.75rem !important; }
+}
+
+/* ── Mobile: caption / small text ── */
+@media screen and (max-width: 768px) {
+    .stCaption, small { font-size: 0.7rem !important; }
+}
+
+/* ── Mobile: sidebar — hidden by default, overlays when opened ──
+   On narrow viewports the sidebar slides in from the left only when
+   the user taps the hamburger toggle (aria-expanded="true").        */
+@media screen and (max-width: 768px) {
+    section[data-testid="stSidebar"] {
+        transform:  translateX(-110%)           !important;
+        transition: transform 0.3s ease         !important;
+        position:   fixed                       !important;
+        top:        0                           !important;
+        left:       0                           !important;
+        height:     100vh                       !important;
+        width:      min(85vw, 360px)            !important;
+        min-width:  unset                       !important;
+        z-index:    999                         !important;
+        box-shadow: 4px 0 24px rgba(0,0,0,0.6) !important;
+    }
+    section[data-testid="stSidebar"][aria-expanded="true"] {
+        transform: translateX(0) !important;
+    }
+    [data-testid="stSidebar"] .stSlider,
+    [data-testid="stSidebar"] .stSelectbox,
+    [data-testid="stSidebar"] .stNumberInput {
+        font-size: 0.875rem !important;
+    }
+}
+
+/* ── Tablet (769–1024px): mild tuning ── */
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+    .main .block-container {
+        padding-left:  1rem !important;
+        padding-right: 1rem !important;
+    }
+    [data-testid="stMetricValue"] { font-size: 1.2rem !important; }
+    [data-testid="stMetricLabel"] { font-size: 0.7rem !important; }
+    [data-testid="stMetricDelta"] { font-size: 0.7rem !important; }
+}
+</style>
+"""
+
 
 def inject_css() -> None:
-    """Inject the global dark-theme CSS into the current page."""
-    st.markdown(DARK_CSS, unsafe_allow_html=True)
+    """Inject the global dark-theme CSS plus mobile responsive CSS."""
+    st.markdown(DARK_CSS,   unsafe_allow_html=True)
+    st.markdown(MOBILE_CSS, unsafe_allow_html=True)
+
+
+def inject_mobile_css() -> None:
+    """
+    Inject only the mobile-responsive CSS media queries.
+
+    Call this at the top of every page (in addition to inject_css / page_header)
+    so that mobile scaling is guaranteed regardless of page entry point.
+    Injecting the same CSS block twice is harmless — browsers deduplicate rules.
+    """
+    st.markdown(MOBILE_CSS, unsafe_allow_html=True)
 
 
 # ---------------------------------------------------------------------------

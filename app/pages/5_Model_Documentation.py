@@ -14,9 +14,10 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 import streamlit as st
-from app.components.styles import inject_css, page_header, section_header
+from app.components.styles import inject_css, inject_mobile_css, page_header, section_header
 
 inject_css()
+inject_mobile_css()
 page_header("Model Documentation", "Architecture, formulas, assumptions, limitations, and next steps")
 
 st.markdown("""
