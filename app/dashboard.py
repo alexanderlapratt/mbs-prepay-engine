@@ -41,7 +41,7 @@ from app.components.styles import inject_css, inject_mobile_css, page_header
 
 st.set_page_config(
     page_title="MBS Prepayment Engine",
-    page_icon="📊",
+    page_icon="λ",
     layout="wide",
     initial_sidebar_state="collapsed",   # collapsed by default → better on mobile
     menu_items={
@@ -98,12 +98,24 @@ seed_pool = get_seed_pool() or {}
 # Streamlit picks them up on the next rerun.  Using pop() ensures the values
 # are applied exactly once — subsequent reruns use whatever the user sets.
 
+# ── Seed defaults on first load so widgets never see both value= and key= ──
+# These run only once (when the keys don't yet exist in session_state).
+# After that, the user's slider positions are preserved across reruns.
+if "_sb_balance" not in st.session_state:
+    st.session_state["_sb_balance"] = int(seed_pool.get("original_balance", 100_000_000))
+if "_sb_wac_pct" not in st.session_state:
+    st.session_state["_sb_wac_pct"] = round(float(seed_pool.get("wac", 0.065)) * 100, 3)
+if "_sb_wam" not in st.session_state:
+    st.session_state["_sb_wam"] = int(seed_pool.get("wam", 360))
+
+# ── Overwrite with Fannie Mae values if "Apply to Sidebar" was clicked ──
 if "fnma_balance" in st.session_state:
     _v = max(1_000_000, min(10_000_000_000, int(st.session_state.pop("fnma_balance"))))
     st.session_state["_sb_balance"] = _v
 
 if "fnma_wac" in st.session_state:
-    _v = round(float(st.session_state.pop("fnma_wac")) * 100, 3)
+    # fnma_wac is stored as a percentage (e.g. 6.609) — do NOT multiply by 100
+    _v = float(st.session_state.pop("fnma_wac"))
     _v = round(_v / 0.125) * 0.125          # snap to slider step
     st.session_state["_sb_wac_pct"] = max(2.0, min(12.0, _v))
 
@@ -134,7 +146,6 @@ with st.sidebar:
         "Original Balance ($)",
         min_value=1_000_000,
         max_value=10_000_000_000,
-        value=int(seed_pool.get("original_balance", 100_000_000)),
         step=1_000_000,
         format="%d",
         key="_sb_balance",
@@ -144,7 +155,6 @@ with st.sidebar:
     wac_pct = st.slider(
         "WAC — Gross Coupon (%)",
         min_value=2.0, max_value=12.0,
-        value=float(seed_pool.get("wac", 0.065)) * 100,
         step=0.125,
         key="_sb_wac_pct",
         help="Weighted average coupon (gross, before servicing fee).",
@@ -154,7 +164,6 @@ with st.sidebar:
     wam = st.slider(
         "WAM — Original Term (months)",
         min_value=60, max_value=360,
-        value=int(seed_pool.get("wam", 360)),
         step=12,
         key="_sb_wam",
         help="Original weighted average maturity in months.",
@@ -294,7 +303,7 @@ if should_run or st.session_state.get("_last_params") != _pool_params_key():
 
 page_header(
     "MBS Prepayment, Cash Flow & Hedging Engine",
-    "Fixed Income Relative Value Analytics | Fixed-Rate Agency MBS",
+    "Fixed Income Relative Value Analytics | λ Prepayment Engine | Fixed-Rate Agency MBS",
 )
 
 pool_params      = st.session_state.get("pool_params", {})
@@ -347,5 +356,6 @@ st.divider()
 st.caption(
     "Built by Alexander LaPratt · Yale BS CS & Mathematics · "
     "MBS Prepayment Engine v1.0 · "
-    "All data is user-supplied or model-computed — no external APIs required."
+    "Pool analytics are model-computed. Real pool profiles sourced from Fannie Mae Single-Family Loan Performance Data (SFLP), "
+    "2024 Q1, comprising 272,963 thirty-year fixed-rate originations. Stylized pool parameters are user-defined. No live API dependencies."
 )

@@ -108,9 +108,9 @@ with st.expander("📂  Load Real Fannie Mae Pool Data", expanded=False):
             )
 
         st.caption(
-            "Source: Fannie Mae Single-Family Loan Performance Data (SFLP), 2024 Q1.  "
-            "Pool characteristics computed from 272,963 30-year fixed-rate originations "
-            "with FICO ≥ 300, LTV > 0, and rate in [2%, 12%].  "
+            "Source: Fannie Mae Single-Family Loan Performance Data (SFLP), 2024 Q1. "
+            "Pool characteristics computed from 272,963 thirty-year fixed-rate originations "
+            "with FICO greater than or equal to 300, LTV greater than 0, and rate in the range of 2% to 12%. "
             "Balance shown as $100M representative pool for engine comparability."
         )
 

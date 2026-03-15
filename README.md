@@ -298,7 +298,7 @@ source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
 # Run the dashboard
-streamlit run app/dashboard.py
+streamlit run app/Dashboard.py
 
 # Run the tests
 pytest tests/ -v
@@ -312,7 +312,7 @@ The app will be available at `http://localhost:8501`.
 
 1. Push this repo to GitHub (public or private).
 2. Go to [share.streamlit.io](https://share.streamlit.io) → New App.
-3. Select repo, branch `main`, and set **Main file path** to `app/dashboard.py`.
+3. Select repo, branch `main`, and set **Main file path** to `app/Dashboard.py`.
 4. Click **Deploy** — no additional configuration required.
 
 The `.streamlit/config.toml` file configures the dark theme and wide layout automatically.
@@ -326,7 +326,7 @@ The `.streamlit/config.toml` file configures the dark theme and wide layout auto
 ```
 mbs-prepay-engine/
 ├── app/
-│   ├── dashboard.py              # Main entry point & sidebar controls
+│   ├── Dashboard.py              # Main entry point & sidebar controls
 │   ├── pages/
 │   │   ├── 1_Pool_Setup.py
 │   │   ├── 2_Scenario_Analysis.py
