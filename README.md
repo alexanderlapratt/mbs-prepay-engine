@@ -7,7 +7,7 @@
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.32%2B-red)](https://streamlit.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
-**Live App:** `https://your-app-name.streamlit.app` _(deploy via Streamlit Community Cloud)_
+**Live App:** `https://mbs-prepay-engine-8ts8bbjxfnf8xkeel5gq3w.streamlit.app` _(deploy via Streamlit Community Cloud)_
 
 ---
 
@@ -269,7 +269,7 @@ The app will be available at `http://localhost:8501`.
 
 The `.streamlit/config.toml` file configures the dark theme and wide layout automatically.
 
-**Deployed App:** `https://your-app-name.streamlit.app`
+**Deployed App:** `https://mbs-prepay-engine-8ts8bbjxfnf8xkeel5gq3w.streamlit.app`
 
 ---
 
@@ -320,6 +320,6 @@ mbs-prepay-engine/
 
 **Alexander LaPratt**
 Yale University — BS Computer Science & Mathematics (4.0 Major GPA)
-[alex.lapratt@gmail.com](mailto:alex.lapratt@gmail.com)
+[alexander.lapratt@yale.edu](mailto:alexander.lapratt@yale.edu)
 
 _Built March 2026 as a technical demonstration of MBS analytics._
