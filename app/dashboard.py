@@ -162,29 +162,60 @@ with st.sidebar:
 
     if data_source == "Fannie Mae 2024 Q1":
         if _fnma_sidebar_profiles is not None and not _fnma_sidebar_profiles.empty:
-            _sb_bucket = st.selectbox(
-                "Rate Bucket",
-                options=_FNMA_BUCKETS,
-                index=min(3, len(_FNMA_BUCKETS) - 1),
-                key="_sb_fnma_bucket",
-                help="2024 Q1 origination cohort grouped by interest rate range.",
+            _ALL_BUCKET_LABELS = ["All Buckets"] + _FNMA_BUCKETS
+
+            _selected_labels = st.multiselect(
+                "Select Rate Buckets",
+                options=_ALL_BUCKET_LABELS,
+                default=["All Buckets"],
+                key="_sb_fnma_buckets",
+                help="Select one or more 2024 Q1 rate cohorts. Stats are UPB-weighted blends.",
             )
-            _sb_row = _fnma_sidebar_profiles[
-                _fnma_sidebar_profiles["rate_bucket"] == _sb_bucket
-            ].iloc[0]
-            # Auto-populate slider keys before widgets render
-            _wac_snapped = round(round(float(_sb_row["wac"]) / 0.125) * 0.125, 3)
-            st.session_state["_sb_wac_pct"] = max(2.0, min(12.0, _wac_snapped))
-            st.session_state["_sb_wam"]     = int(_sb_row["wam"])
-            st.session_state["_sb_balance"] = 100_000_000
-            st.session_state["fnma_applied"] = True
-            st.session_state["fnma_bucket"]  = _sb_bucket
-            st.success(
-                f"📂 FNMA **{_sb_bucket}** · WAC {_sb_row['wac']:.3f}% · "
-                f"{int(_sb_row['loan_count']):,} loans · "
-                f"${_sb_row['total_balance'] / 1e9:.1f}B",
-                icon=None,
-            )
+
+            if not _selected_labels:
+                st.warning("Please select at least one rate bucket.")
+            else:
+                # "All Buckets" selected → use every bucket regardless of other selections
+                if "All Buckets" in _selected_labels:
+                    _active_buckets = _FNMA_BUCKETS
+                    _bucket_label   = "All Buckets"
+                else:
+                    _active_buckets = _selected_labels
+                    _bucket_label   = ", ".join(_active_buckets)
+
+                # UPB-weighted blended stats across active buckets
+                _sel       = _fnma_sidebar_profiles[
+                    _fnma_sidebar_profiles["rate_bucket"].isin(_active_buckets)
+                ]
+                _total_bal  = _sel["total_balance"].sum()
+                _blended_wac = (
+                    (_sel["wac"] * _sel["total_balance"]).sum() / _total_bal
+                )
+                _total_loans = int(_sel["loan_count"].sum())
+                _avg_ltv    = (
+                    (_sel["avg_ltv"] * _sel["total_balance"]).sum() / _total_bal
+                )
+                _avg_fico   = (
+                    (_sel["avg_fico"] * _sel["total_balance"]).sum() / _total_bal
+                )
+
+                # Snap blended WAC to slider step then populate slider keys
+                _wac_snapped = round(round(_blended_wac / 0.125) * 0.125, 3)
+                st.session_state["_sb_wac_pct"] = max(2.0, min(12.0, _wac_snapped))
+                st.session_state["_sb_wam"]     = 360
+                st.session_state["_sb_balance"] = 100_000_000
+                st.session_state["fnma_applied"] = True
+                st.session_state["fnma_bucket"]  = _bucket_label
+
+                st.success(
+                    f"📂 FNMA **{_bucket_label}** · "
+                    f"WAC {_blended_wac:.3f}% · "
+                    f"{_total_loans:,} loans · "
+                    f"${_total_bal / 1e9:.1f}B · "
+                    f"LTV {_avg_ltv:.1f}% · "
+                    f"FICO {_avg_fico:.0f}",
+                    icon=None,
+                )
         else:
             st.warning(
                 "Profile data not found. "

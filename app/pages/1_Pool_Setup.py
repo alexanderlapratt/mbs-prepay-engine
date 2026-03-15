@@ -101,7 +101,7 @@ with st.expander("📂  Fannie Mae Pool Data", expanded=False):
                 st.session_state["fnma_applied"]    = True
                 # Sync the sidebar data source toggle so it reflects Fannie Mae mode
                 st.session_state["_sb_data_source"] = "Fannie Mae 2024 Q1"
-                st.session_state["_sb_fnma_bucket"] = _selected_bucket
+                st.session_state["_sb_fnma_buckets"] = [_selected_bucket]
                 st.success(
                     f"✅  Loaded **{_selected_bucket}** pool: "
                     f"WAC={_row['wac']:.3f}%, WAM={int(_row['wam'])}mo, "
