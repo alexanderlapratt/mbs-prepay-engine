@@ -367,7 +367,7 @@ mbs-prepay-engine/
 ## Author
 
 **Alexander LaPratt**
-Yale University — BS Computer Science & Mathematics (4.0 Major GPA)
+Yale University — BS Computer Science & Mathematics (4.0 Major GPA; 3.81 Cumulative)
 [alexander.lapratt@yale.edu](mailto:alexander.lapratt@yale.edu)
 
 _Built March 2026 as a technical demonstration of agency MBS analytics, incorporating real Fannie Mae Single-Family Loan Performance Data._
